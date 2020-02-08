@@ -1,50 +1,177 @@
 <template>
   <div id="home">
     <nav-bar class="home-nva">
-      <p slot="center">购物街</p>
+      <p slot="center">蘑菇街</p>
     </nav-bar>
-    <home-swiper :banners="banners" />
-    <recommend-view :recommends="recommends"/>
+    <scroll class="content"
+            ref="content" 
+            :probe-type="3" 
+            @scroll="contentScroll"
+            :pull-up-load="true"
+            @loadMore="loadMore">
+      <home-swiper :banners="banners" />
+      <recommend-view :recommends="recommends" />
+      <feature-view />
+      <tab-control class="tab-control" :titles="['流行','新款','精选']" @tabClick="tabClick" />
+      <goods-list :goods="showGoods"></goods-list>
+    </scroll>
+    <back-top @click.native="backClick" v-show="isShow"/>
   </div>
 </template>
 
 <script>
-import NavBar from "components/common/navbar/NavBar.vue";
 import HomeSwiper from "./childComps/HomeSwiper";
-import RecommendView from './childComps/RecomendView'
+import RecommendView from "./childComps/RecomendView";
+import FeatureView from "./childComps/FeatureView";
 
-import { getHomeMultiData } from "network/home";
+import NavBar from "components/common/navbar/NavBar.vue";
+import TabControl from "components/content/tabControl/TabControl";
+import GoodsList from "components/content/goods/GoodsList";
+import Scroll from "components/common/scroll/Scroll";
+import BackTop from "components/content/backTop/BackTop"
+
+import { getHomeMultiData, getGoods } from "network/home";
 
 export default {
   name: "Home",
   components: {
     NavBar,
     HomeSwiper,
-    RecommendView
+    RecommendView,
+    FeatureView,
+    TabControl,
+    GoodsList,
+    Scroll,
+    BackTop
   },
   data() {
     return {
       // result:null 所有的数据
       banners: [],
-      recommends: []
+      recommends: [],
+      goods: {
+        pop: { page: 0, list: [] },
+        new: { page: 0, list: [] },
+        sell: { page: 0, list: [] }
+      },
+      currentType: "pop",
+      isShow:false
     };
+  },
+
+  computed: {
+    showGoods() {
+      return this.goods[this.currentType].list;
+    }
   },
   created() {
     //请求多个数据
-    getHomeMultiData().then(res => {
-      // console.log(res);
-      // this.result = res.data;  //调用结束时res会被回收，需要保存到数据里
-      this.banners = res.data.banner.list;
-      this.recommends = res.data.recommend.list;
-      console.log(this.banners[0].link);
-    });
+    this.getHomeMultiData();
+
+    //商品数据的请求
+    this.getGoods("pop");
+    this.getGoods("new");
+    this.getGoods("sell");
+  },
+  methods: {
+    /**
+     * 下面是事件监听相关代码
+     */
+    
+    //监听流行，新款，热卖事件
+    tabClick(index) {
+      console.log(index);
+      switch (index) {
+        case 0:
+          this.currentType = "pop";
+          break;
+        case 1:
+          this.currentType = "new";
+          break;
+        case 2:
+          this.currentType = "sell";
+          break;
+      }
+    },
+
+    backClick(){
+      console.log('返回顶部');
+      
+      this.$refs.content.backTo(0,0,200)
+    },
+
+
+    contentScroll(position){
+      // console.log(position);
+      // if(position.y<-600) this.isShow = true
+      // else this.isShow = false
+      this.isShow = (-position.y) > 600
+    },
+
+    /**
+     * 下面是网络请求相关代码
+     */
+    getHomeMultiData() {
+      getHomeMultiData().then(res => {
+        // console.log(res);
+        // this.result = res.data;  //调用结束时res会被回收，需要保存到数据里
+        this.banners = res.data.banner.list;
+        this.recommends = res.data.recommend.list;
+        // console.log(this.banners[0].link);
+      });
+    },
+
+    getGoods(type) {
+      const page = this.goods[type].page + 1;
+      getGoods(type, page).then(res => {
+        // console.log(res);
+        this.goods[type].list.push(...res.data.list);
+        this.goods[type].page += 1;
+        // console.log(this.goods[type].list[0].show.img);
+
+        this.$refs.content.finishPullUp()
+      });
+    },
+
+    loadMore(type){
+      this.getGoods(this.currentType)
+
+      this.$refs.content.scroll.refresh()
+    }
   }
 };
 </script>
 
 <style scoped>
+.content {
+  /* height: 470px; */
+  /* height: calc(100% - 93px);
+  margin-top: 44px; */
+  /* overflow: hidden; */
+  overflow: hidden;
+  position: absolute;
+  top: 44px;
+  bottom: 49px;
+  left: 0;
+  right: 0;
+}
+#home {
+  /* padding-top: 44px; */
+  height: 100vh;
+  position: relative;
+}
 .home-nva {
   background-color: var(--color-tint);
   color: aliceblue;
+
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 9;
+}
+.tab-control {
+  position: sticky;
+  top: 44px;
 }
 </style>
