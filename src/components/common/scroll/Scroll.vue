@@ -33,20 +33,22 @@ export default {
     this.scroll = new BScroll(this.$refs.wrapper, {
       pullUpLoad: this.pullUpLoad,
       click: true,
-      probeType: this.probeType
+      probeType: this.probeType //0 和 1 都不监听位置 2 和3 监听
     });
 
-    //到底部的监听
+    //上拉的监听
     this.scroll.on("pullingUp", () => {
       // console.log("上拉加载更多");
       this.$emit("loadMore")
     });
 
     //滚动位置监听
-    this.scroll.on("scroll", position => {
+    if(this.probeType===2 || this.probeType ===3){
+      this.scroll.on("scroll", position => {
       // console.log(position);
       this.$emit('scroll',position)
     });
+    }
   },
   methods: {
 
@@ -57,9 +59,14 @@ export default {
     
     //封装结束上拉加载函数
     finishPullUp(){
-      this.scroll.finishPullUp()
-    }
+      this.scroll && this.scroll.finishPullUp()
+    },
     
+    //封装更新函数
+    refresh(){
+      console.log('--------');
+      this.scroll && this.scroll.refresh()
+    }
 
   }
 };

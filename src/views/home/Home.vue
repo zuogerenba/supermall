@@ -1,21 +1,27 @@
 <template>
   <div id="home">
-    <nav-bar class="home-nva">
-      <p slot="center">蘑菇街</p>
-    </nav-bar>
-    <scroll class="content"
-            ref="content" 
-            :probe-type="3" 
-            @scroll="contentScroll"
-            :pull-up-load="true"
-            @loadMore="loadMore">
-      <home-swiper :banners="banners" />
+    <nav-bar class="home-nva"><p slot="center">蘑菇街</p></nav-bar>
+    <tab-control :titles="['流行','新款','精选']" 
+                   @tabClick="tabClick" 
+                   ref="tabControl1"
+                   class="tab-control" v-show="isTabFixed"/>
+    <scroll
+      class="content"
+      ref="content"
+      :probe-type="3"
+      @scroll="contentScroll"
+      :pull-up-load="true"
+      @loadMore="loadMore"
+    >
+      <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"/>
       <recommend-view :recommends="recommends" />
       <feature-view />
-      <tab-control class="tab-control" :titles="['流行','新款','精选']" @tabClick="tabClick" />
+      <tab-control :titles="['流行','新款','精选']" 
+                   @tabClick="tabClick" 
+                   ref="tabControl2"/>
       <goods-list :goods="showGoods"></goods-list>
     </scroll>
-    <back-top @click.native="backClick" v-show="isShow"/>
+    <back-top @click.native="backClick" v-show="isShow" />
   </div>
 </template>
 
@@ -28,9 +34,10 @@ import NavBar from "components/common/navbar/NavBar.vue";
 import TabControl from "components/content/tabControl/TabControl";
 import GoodsList from "components/content/goods/GoodsList";
 import Scroll from "components/common/scroll/Scroll";
-import BackTop from "components/content/backTop/BackTop"
+import BackTop from "components/content/backTop/BackTop";
 
 import { getHomeMultiData, getGoods } from "network/home";
+import { debounce } from "../../common/utils"
 
 export default {
   name: "Home",
@@ -55,7 +62,9 @@ export default {
         sell: { page: 0, list: [] }
       },
       currentType: "pop",
-      isShow:false
+      isShow: false,
+      tabOffsetTop:0,
+      isTabFixed:false
     };
   },
 
@@ -65,19 +74,29 @@ export default {
     }
   },
   created() {
-    //请求多个数据
+    //1.请求多个数据
     this.getHomeMultiData();
 
-    //商品数据的请求
+    //2.商品数据的请求
     this.getGoods("pop");
     this.getGoods("new");
     this.getGoods("sell");
+  },
+  mounted() {
+    const refresh = debounce(this.$refs.content.refresh, 500);
+
+    //3.监听图片加载完成
+    this.$bus.$on("itemImgLoad", () => {
+      // console.log('-----------');
+      // this.$refs.content.refresh();
+      refresh();
+    });
   },
   methods: {
     /**
      * 下面是事件监听相关代码
      */
-    
+
     //监听流行，新款，热卖事件
     tabClick(index) {
       console.log(index);
@@ -92,20 +111,22 @@ export default {
           this.currentType = "sell";
           break;
       }
+      this.$refs.tabControl2.currentIndex = index;
+      this.$refs.tabControl1.currentIndex = index;
     },
 
-    backClick(){
-      console.log('返回顶部');
-      
-      this.$refs.content.backTo(0,0,200)
+    backClick() {
+      console.log("返回顶部");
+
+      this.$refs.content.backTo(0, 0, 200);
     },
 
+    contentScroll(position) {
+      //1.判断backTop是否显示
+      this.isShow = (-position.y) > 600;
 
-    contentScroll(position){
-      // console.log(position);
-      // if(position.y<-600) this.isShow = true
-      // else this.isShow = false
-      this.isShow = (-position.y) > 600
+      //2.决定tabControl是否吸顶
+    this.isTabFixed = (-position.y) > this.tabOffsetTop
     },
 
     /**
@@ -136,13 +157,28 @@ export default {
     loadMore(type){
       this.getGoods(this.currentType)
 
-      this.$refs.content.scroll.refresh()
+      // this.$refs.content.scroll.refresh()
+    },
+
+    swiperImageLoad(){
+      this.tabOffsetTop =this.$refs.tabControl2.$el.offsetTop
+      console.log(this.tabOffsetTop);
     }
   }
 };
 </script>
 
 <style scoped>
+.tab-control{
+  position: relative;
+  z-index: 9;
+}
+/* .fixed{
+  position: fixed;
+  right: 0;
+  left: 0;
+  top: 44px;
+} */
 .content {
   /* height: 470px; */
   /* height: calc(100% - 93px);
@@ -164,14 +200,14 @@ export default {
   background-color: var(--color-tint);
   color: aliceblue;
 
-  position: fixed;
+  /* position: fixed;
   left: 0;
   right: 0;
   top: 0;
-  z-index: 9;
+  z-index: 9;  原生(避免跟网页一起滚动)才需要，better-scroll 后滚动区域只有中间部分，所以不需要了 */
 }
-.tab-control {
-  position: sticky;
+/* .tab-control {
+  /* position: sticky;
   top: 44px;
-}
+} */ 
 </style>
