@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrapper">
+  <div ref="wrapper" class="wrapper">
     <div class="content">
       <slot></slot>
     </div>
@@ -10,7 +10,7 @@
 import BScroll from "better-scroll";
 
 export default {
-  name: "",
+  name: "Scroll",
   props: {
     probeType: {
       type: Number,
@@ -64,7 +64,6 @@ export default {
     
     //封装更新函数
     refresh(){
-      console.log('--------');
       this.scroll && this.scroll.refresh()
     }
 
