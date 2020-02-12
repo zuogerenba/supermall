@@ -86,8 +86,8 @@ export default {
     const refresh = debounce(this.$refs.content.refresh, 500);
 
     //3.监听图片加载完成
-    this.$bus.$on("itemImgLoad", () => {
-      // console.log('-----------');
+    this.$bus.$on("homeItemImgLoad", () => {
+      console.log('-----------');
       // this.$refs.content.refresh();
       refresh();
     });

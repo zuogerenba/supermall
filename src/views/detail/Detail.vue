@@ -1,6 +1,6 @@
 <template>
   <div class="detail">
-    <detail-nav-bar class="detail-nav" />
+    <detail-nav-bar class="detail-nav" @titleClick="titleClick" />
     <scroll class="content" ref="scroll">
       <detail-swiper :topImages="topImages" />
       <detail-base-info :goods="goods" />
@@ -8,6 +8,7 @@
       <detail-goods-info :detail-info="detailInfo" @imageLoad="imageLoad" />
       <detail-param-info :param-info="paramInfo"></detail-param-info>
       <detail-comment-info :comment-info="commentInfo"/>
+      <goods-list :goods="recommends" />
     </scroll>
   </div>
 </template>
@@ -22,8 +23,10 @@ import DetailParamInfo from "./detailChild/DetailParamInfo"
 import DetailCommentInfo from "./detailChild/DetailCommentInfo"
 
 import Scroll from "components/common/scroll/Scroll";
+import GoodsList from "components/content/goods/GoodsList"
 
-import { getDetail, Goods, Shop, GoodsParam } from "network/detail";
+import { getDetail, Goods, Shop, GoodsParam,getRecommend } from "network/detail";
+import { debounce } from "../../common/utils"
 
 export default {
   name: "Detail",
@@ -35,7 +38,8 @@ export default {
       shop: {},
       detailInfo: {},
       paramInfo:{},
-      commentInfo:{}
+      commentInfo:{},
+      recommends:[]
     };
   },
 
@@ -47,7 +51,8 @@ export default {
     Scroll,
     DetailGoodsInfo,
     DetailParamInfo,
-    DetailCommentInfo
+    DetailCommentInfo,
+    GoodsList
   },
   created() {
     //1.保存传入的id
@@ -55,7 +60,7 @@ export default {
 
     //2.根据iid请求数据
     getDetail(this.iid).then(res => {
-      console.log(res);
+      // console.log(res);
       //1.获取轮播图图片
       const data = res.result;
       this.topImages = data.itemInfo.topImages;
@@ -81,13 +86,31 @@ export default {
         this.commentInfo = data.rate.list[0]
       }
     });
+
+    //3.获得推荐图片数据
+    getRecommend().then(res=>{
+      this.recommends = res.data.list
+      console.log(this.recommends);
+    })
   },
-  mounted() {},
+  mounted() {
+     const refresh = debounce(this.$refs.scroll.refresh, 500);
+
+    //3.监听图片加载完成
+    this.$bus.$on("detailItemImgLoad", () => {
+      console.log('-----------');
+      // this.$refs.content.refresh();
+      refresh();
+    });
+  },
   methods: {
     imageLoad() {
       this.$refs.scroll.refresh();
-      console.log("--------");
+    },
+    titleClick(index){
+      console.log(index);
     }
+    
   }
 };
 </script>

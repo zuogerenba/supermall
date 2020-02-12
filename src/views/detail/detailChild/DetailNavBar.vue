@@ -41,6 +41,7 @@ export default {
     //1.标题的点击事件
     itemClick(index) {
       this.currentIndex = index;
+      this.$emit("titleClick",index)
     },
 
     //2.返回的点击事件

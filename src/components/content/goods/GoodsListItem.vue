@@ -1,6 +1,6 @@
 <template>
   <div class="goods" @click="itemClick">
-    <img :src="goodsItem.show.img" alt="" @load="imageLoad" />
+    <img :src="getRecommends" alt="" @load="imageLoad" />
     <div class="goods-info">
       <p>{{goodsItem.title}}</p>
       <span class="price">{{goodsItem.price}}</span>
@@ -19,10 +19,21 @@ export default {
       }
     }
   },
+  computed:{
+    getRecommends(){
+      return this.goodsItem.image || this.goodsItem.show.img
+    }
+  },
   methods: {
     imageLoad() {
       // console.log('imageLoad');
-      this.$bus.$emit("itemImgLoad");
+      if(this.$route.path.indexOf('/home')) {
+        this.$bus.$emit("homeItemImgLoad");
+      }else if(this.$route.path.indexOf('/detail')){
+        this.$bus.$emit("detailItemImgLoad")
+      }
+      
+      
     },
     itemClick() {
       // console.log('跳转到详情页');
