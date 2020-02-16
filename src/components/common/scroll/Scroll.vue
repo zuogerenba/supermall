@@ -47,6 +47,7 @@ export default {
       this.scroll.on("scroll", position => {
       // console.log(position);
       this.$emit('scroll',position)
+      // console.log('----------');
     });
     }
   },

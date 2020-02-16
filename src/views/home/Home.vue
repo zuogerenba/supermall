@@ -87,7 +87,7 @@ export default {
 
     //3.监听图片加载完成
     this.$bus.$on("homeItemImgLoad", () => {
-      console.log('-----------');
+      // console.log('-----------');
       // this.$refs.content.refresh();
       refresh();
     });

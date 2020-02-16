@@ -1,15 +1,16 @@
 <template>
   <div class="detail">
-    <detail-nav-bar class="detail-nav" @titleClick="titleClick" />
-    <scroll class="content" ref="scroll">
+    <detail-nav-bar class="detail-nav" @titleClick="titleClick" ref="nav" />
+    <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
       <detail-swiper :topImages="topImages" />
       <detail-base-info :goods="goods" />
       <detail-shop-info :shop="shop" />
       <detail-goods-info :detail-info="detailInfo" @imageLoad="imageLoad" />
-      <detail-param-info :param-info="paramInfo"></detail-param-info>
-      <detail-comment-info :comment-info="commentInfo"/>
-      <goods-list :goods="recommends" />
+      <detail-param-info ref="params" :param-info="paramInfo"></detail-param-info>
+      <detail-comment-info ref="comment" :comment-info="commentInfo" />
+      <goods-list ref="recommend" :goods="recommends" />
     </scroll>
+    <detail-bottom-bar />
   </div>
 </template>
 
@@ -19,14 +20,21 @@ import DetailSwiper from "./detailChild/DetailSwiper";
 import DetailBaseInfo from "./detailChild/DetailBaseInfo";
 import DetailShopInfo from "./detailChild/DetailShopInfo";
 import DetailGoodsInfo from "./detailChild/DetailGoodsInfo";
-import DetailParamInfo from "./detailChild/DetailParamInfo"
-import DetailCommentInfo from "./detailChild/DetailCommentInfo"
+import DetailParamInfo from "./detailChild/DetailParamInfo";
+import DetailCommentInfo from "./detailChild/DetailCommentInfo";
+import DetailBottomBar from "./detailChild/DetailBottomBar"
 
 import Scroll from "components/common/scroll/Scroll";
-import GoodsList from "components/content/goods/GoodsList"
+import GoodsList from "components/content/goods/GoodsList";
 
-import { getDetail, Goods, Shop, GoodsParam,getRecommend } from "network/detail";
-import { debounce } from "../../common/utils"
+import {
+  getDetail,
+  Goods,
+  Shop,
+  GoodsParam,
+  getRecommend
+} from "network/detail";
+import { debounce } from "../../common/utils";
 
 export default {
   name: "Detail",
@@ -37,9 +45,11 @@ export default {
       goods: {},
       shop: {},
       detailInfo: {},
-      paramInfo:{},
-      commentInfo:{},
-      recommends:[]
+      paramInfo: {},
+      commentInfo: {},
+      recommends: [],
+      themeTopYs: [],
+      currentIndex:0
     };
   },
 
@@ -52,7 +62,8 @@ export default {
     DetailGoodsInfo,
     DetailParamInfo,
     DetailCommentInfo,
-    GoodsList
+    GoodsList,
+    DetailBottomBar
   },
   created() {
     //1.保存传入的id
@@ -79,38 +90,81 @@ export default {
       this.detailInfo = data.detailInfo;
 
       //5.商品参数
-      this.paramInfo = new GoodsParam(data.itemParams.info,data.itemParams.rule)
+      this.paramInfo = new GoodsParam(
+        data.itemParams.info,
+        data.itemParams.rule
+      );
 
       //6.取出评论信息
-      if(data.rate.cRate !== 0 ){
-        this.commentInfo = data.rate.list[0]
+      if (data.rate.cRate !== 0) {
+        this.commentInfo = data.rate.list[0];
       }
     });
 
     //3.获得推荐图片数据
-    getRecommend().then(res=>{
-      this.recommends = res.data.list
-      console.log(this.recommends);
-    })
+    getRecommend().then(res => {
+      this.recommends = res.data.list;
+      // console.log(this.recommends);
+    });
   },
   mounted() {
-     const refresh = debounce(this.$refs.scroll.refresh, 500);
+    const refresh = debounce(this.$refs.scroll.refresh, 500);
 
     //3.监听图片加载完成
     this.$bus.$on("detailItemImgLoad", () => {
-      console.log('-----------');
+      // console.log('-----------');
       // this.$refs.content.refresh();
       refresh();
     });
   },
+  // updated() {
+  //   this.themeTopYs = []
+
+  //   this.themeTopYs.push(0);
+  //   this.themeTopYs.push(this.$refs.params.$el.offsetTop);
+  //   this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
+  //   this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+
+  //   console.log(this.themeTopYs);
+  // },
   methods: {
     imageLoad() {
       this.$refs.scroll.refresh();
+
+      this.themeTopYs = [];
+
+      this.themeTopYs.push(0);
+      this.themeTopYs.push(this.$refs.params.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+
+      console.log(this.themeTopYs);
     },
-    titleClick(index){
+    titleClick(index) {
       console.log(index);
+      this.$refs.scroll.backTo(0, -this.themeTopYs[index], 100);
+    },
+    contentScroll(position) {
+      // console.log(position);
+      // 1.获取y值
+      const positionY = -position.y;
+      let length = this.themeTopYs.length;
+
+      //2.positionY与主题的y对比
+      // [y1,y2,y3,y4] [y1,y2)=0 [y2,y3)=1 [y3,y4)=2 y>y4 -> 3
+      for (let i=0; i <length; i++) {
+        if (this.currentIndex != i &&
+          ((i < length - 1 &&
+            positionY >= this.themeTopYs[i] &&
+            positionY < this.themeTopYs[i+ 1]) ||
+          (i === length - 1 && positionY > this.themeTopYs[i]))
+        ) {
+          // console.log(i);
+          this.currentIndex = i; //供上面判断使用
+          this.$refs.nav.currentIndex = this.currentIndex
+        }
+      }
     }
-    
   }
 };
 </script>
