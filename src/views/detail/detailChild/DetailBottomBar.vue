@@ -27,6 +27,7 @@
     methods: {
       addToCart() {
         this.$emit('addToCart')
+        // console.log('jiaq');
       }
     }
 	}

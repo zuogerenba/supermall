@@ -2,6 +2,7 @@
   <div class="detail">
     <detail-nav-bar class="detail-nav" @titleClick="titleClick" ref="nav" />
     <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
+      <div>{{$store.state.cartList.length}}</div>
       <detail-swiper :topImages="topImages" />
       <detail-base-info :goods="goods" />
       <detail-shop-info :shop="shop" />
@@ -10,7 +11,8 @@
       <detail-comment-info ref="comment" :comment-info="commentInfo" />
       <goods-list ref="recommend" :goods="recommends" />
     </scroll>
-    <detail-bottom-bar />
+    <back-top @click.native="backClick" v-show="isShowBackTop"/>
+    <detail-bottom-bar @addToCart="addToCart" />
   </div>
 </template>
 
@@ -27,6 +29,7 @@ import DetailBottomBar from "./detailChild/DetailBottomBar"
 import Scroll from "components/common/scroll/Scroll";
 import GoodsList from "components/content/goods/GoodsList";
 
+
 import {
   getDetail,
   Goods,
@@ -35,9 +38,11 @@ import {
   getRecommend
 } from "network/detail";
 import { debounce } from "../../common/utils";
+import {backTopMixin} from "../../common/mixin"
 
 export default {
   name: "Detail",
+  mixins:[backTopMixin],
   data() {
     return {
       iid: null,
@@ -145,6 +150,8 @@ export default {
       this.$refs.scroll.backTo(0, -this.themeTopYs[index], 100);
     },
     contentScroll(position) {
+      //是否显示回到顶部
+      this.isShowBackTop = (-position.y) > 600;
       // console.log(position);
       // 1.获取y值
       const positionY = -position.y;
@@ -164,6 +171,19 @@ export default {
           this.$refs.nav.currentIndex = this.currentIndex
         }
       }
+    },
+    addToCart(){
+      console.log('加入购物车!');
+      const product = {}
+      //1.获取购物车展示需要的信息
+      product.image = this.topImages[0]
+      product.title = this.detailInfo.title
+      product.desc = this.detailInfo.desc
+      product.price = this.goods.newPrice
+      product.iid = this.iid
+
+      //2.将商品添加到购物车里
+      this.$store.commit('addCart',product)
     }
   }
 };

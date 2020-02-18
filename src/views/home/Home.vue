@@ -7,7 +7,7 @@
                    class="tab-control" v-show="isTabFixed"/>
     <scroll
       class="content"
-      ref="content"
+      ref="scroll"
       :probe-type="3"
       @scroll="contentScroll"
       :pull-up-load="true"
@@ -21,7 +21,7 @@
                    ref="tabControl2"/>
       <goods-list :goods="showGoods"></goods-list>
     </scroll>
-    <back-top @click.native="backClick" v-show="isShow" />
+    <back-top @click.native="backClick" v-show="isShowBackTop" />
   </div>
 </template>
 
@@ -34,10 +34,11 @@ import NavBar from "components/common/navbar/NavBar.vue";
 import TabControl from "components/content/tabControl/TabControl";
 import GoodsList from "components/content/goods/GoodsList";
 import Scroll from "components/common/scroll/Scroll";
-import BackTop from "components/content/backTop/BackTop";
+// import BackTop from "components/content/backTop/BackTop";
 
 import { getHomeMultiData, getGoods } from "network/home";
 import { debounce } from "../../common/utils"
+import {backTopMixin} from "../../common/mixin"
 
 export default {
   name: "Home",
@@ -48,9 +49,9 @@ export default {
     FeatureView,
     TabControl,
     GoodsList,
-    Scroll,
-    BackTop
+    Scroll
   },
+  mixins:[backTopMixin],
   data() {
     return {
       // result:null 所有的数据
@@ -62,7 +63,7 @@ export default {
         sell: { page: 0, list: [] }
       },
       currentType: "pop",
-      isShow: false,
+      // isShow: false,
       tabOffsetTop:0,
       isTabFixed:false
     };
@@ -83,7 +84,7 @@ export default {
     this.getGoods("sell");
   },
   mounted() {
-    const refresh = debounce(this.$refs.content.refresh, 500);
+    const refresh = debounce(this.$refs.scroll.refresh, 500);
 
     //3.监听图片加载完成
     this.$bus.$on("homeItemImgLoad", () => {
@@ -115,15 +116,14 @@ export default {
       this.$refs.tabControl1.currentIndex = index;
     },
 
+    //返回顶部
     backClick() {
-      console.log("返回顶部");
-
-      this.$refs.content.backTo(0, 0, 200);
+      this.$refs.scroll.backTo(0, 0, 200);
     },
 
     contentScroll(position) {
       //1.判断backTop是否显示
-      this.isShow = (-position.y) > 600;
+      this.isShowBackTop = (-position.y) > 600;
 
       //2.决定tabControl是否吸顶
     this.isTabFixed = (-position.y) > this.tabOffsetTop
@@ -150,7 +150,7 @@ export default {
         this.goods[type].page += 1;
         // console.log(this.goods[type].list[0].show.img);
 
-        this.$refs.content.finishPullUp()
+        this.$refs.scroll.finishPullUp()
       });
     },
 
