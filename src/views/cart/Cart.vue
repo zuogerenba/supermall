@@ -1,18 +1,22 @@
 <template>
   <div>
-      <h2>购物车</h2>
+    <cart-nav-bar></cart-nav-bar>
   </div>
 </template>
 
 <script>
+// import NavBar from 'components/common/navbar/NavBar'
+import CartNavBar from './cartChild/CartNavBar'
+
 export default {
   name: 'Cart',
+ 
   data () {
     return {
       
     };
   },
-  components: {},
+  components: {CartNavBar},
   mounted () {},
   methods: {}
 }

@@ -182,8 +182,11 @@ export default {
       product.price = this.goods.newPrice
       product.iid = this.iid
 
-      //2.将商品添加到购物车里
-      this.$store.commit('addCart',product)
+      //2.将商品添加到购物车里 moutions修改方法
+      // this.$store.commit('addCart',product)
+
+      //2.将商品添加到购物车里 actions修改方法
+      this.$store.dispatch('addCart',product)
     }
   }
 };
