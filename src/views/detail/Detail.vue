@@ -2,7 +2,7 @@
   <div class="detail">
     <detail-nav-bar class="detail-nav" @titleClick="titleClick" ref="nav" />
     <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
-      <div>{{$store.state.cartList.length}}</div>
+      <!-- <div>{{$store.state.cartList.length}}</div> -->
       <detail-swiper :topImages="topImages" />
       <detail-base-info :goods="goods" />
       <detail-shop-info :shop="shop" />
@@ -200,7 +200,7 @@ export default {
   height: 100vh;
 }
 .content {
-  height: calc(100% - 44px);
+  height: calc(100% - 44px - 49px);
   /* height: 530px; */
   /* overflow: hidden;
   position: absolute;
@@ -208,6 +208,7 @@ export default {
   bottom: 49px;
   left: 0;
   right: 0; */
+  overflow: hidden;
 }
 .detail-nav {
   position: relative;
