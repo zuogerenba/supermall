@@ -1,13 +1,12 @@
 <template>
-  <div>{{product}}</div>
+  <div>
+    {{product}}
+  </div>
 </template>
 
 <script>
 export default {
   name: "CartListItem",
-  data() {
-    return {};
-  },
   props: {
     product: {
       type: Object,
@@ -15,11 +14,7 @@ export default {
         return {};
       }
     }
-  },
-  components: {},
-  mounted() {},
-  props: {},
-  methods: {}
+  }
 };
 </script>
 

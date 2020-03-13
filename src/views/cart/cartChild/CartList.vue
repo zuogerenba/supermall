@@ -14,9 +14,7 @@ export default {
   components: {
     CartListItem
   },
-  data() {
-    return {};
-  },
+
 
   computed: {
     ...mapGetters({

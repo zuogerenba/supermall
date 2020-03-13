@@ -1,9 +1,12 @@
 <template>
   <div class="cart">
+    <!-- 导航栏 -->
     <cart-nav-bar></cart-nav-bar>
-    <scroll class="content">
+    <scroll class="content" ref="scroll">
+      <!-- 商品列表 -->
       <cart-list/>
     </scroll>
+    <!-- 汇总 -->
   </div>
 </template>
 
@@ -24,7 +27,10 @@ export default {
   data() {
     return {};
   },
-
+  activated(){
+    console.log('------');
+    this.$refs.scroll.refresh()
+  },
   mounted() {},
   methods: {}
 };
